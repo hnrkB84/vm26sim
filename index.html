@@ -325,8 +325,7 @@ table.tt{width:100%;border-collapse:collapse}
         <div class="beta-badge">BETA</div>
         <span style="font-size:11px;color:rgba(255,255,255,.3);letter-spacing:1px">Trupper uppdateras löpande</span>
       </div>
-      <p class="om-p">Ett hobbyprojekt byggt av nördkärlek till fotboll och kod. Idén var enkel: vad händer om man simulerar hela VM 2026 — med riktiga lag, riktiga trupper och en snygg presentation?</p>
-      <p class="om-p">Varje simulering är unik. Poisson-modellen garanterar att favoriterna vinner oftare — men aldrig alltid. Haiti kan vinna VM. Det händer, ungefär en gång per 3000 simuleringar.</p>
+      <p class="om-p">Simulera hela VM 2026 — med riktiga lag, riktiga trupper och ett resultat du aldrig sett förut. Varje körning är unik.</p>
     </div>
     <div class="om-section">
       <div class="om-h2">Teknisk stack</div>
@@ -334,26 +333,27 @@ table.tt{width:100%;border-collapse:collapse}
         <span class="om-tag">Vanilla HTML/CSS/JS</span>
         <span class="om-tag">Barlow Condensed</span>
         <span class="om-tag">Flag-icons 7.x</span>
-        <span class="om-tag">Poisson-fördelning</span>
-        <span class="om-tag">localStorage</span>
-        <span class="om-tag">FIFA-ranking</span>
+        <span class="om-tag">Supabase</span>
+        <span class="om-tag">Render</span>
+        <span class="om-tag">Statistisk simuleringsmodell</span>
+        <span class="om-tag">Officiell rankingdata</span>
         <span class="om-tag">Bookmaker-odds</span>
-        <span class="om-tag">Ingen backend</span>
       </div>
-      <p class="om-p" style="margin-top:12px">Simuleringen körs helt i webbläsaren — ingen server, ingen databas. Resultat sparas lokalt i din enhet.</p>
     </div>
     <div class="om-section">
-      <div class="om-h2">Simuleringsmodellen</div>
-      <p class="om-p">Varje match simuleras med Poisson-fördelning. Förväntade mål beräknas från lagets <strong style="color:rgba(255,255,255,.8)">effektiva rating</strong> = FIFA-ranking (55%) + bokmakarodds (35%) + slumpmässig formfaktor ±8 per simulering (10%).</p>
-      <p class="om-p">Målskyttar väljs med stjärnviktning — lagets huvudanfallare har 5× högre sannolikhet än en reservback. Formfaktorn genereras med normalfördelning, vilket innebär att de flesta lag presterar nära sin ranking men enstaka lag kan överraska ordentligt.</p>
+      <div class="om-h2">Modellen</div>
+      <p class="om-p">Varje match beräknas statistiskt baserat på lagets styrka — viktat mot FIFA-ranking, aktuella odds och en slumpmässig formfaktor. Favoriterna vinner oftare, men aldrig alltid.</p>
     </div>
     <div class="om-section">
-      <div class="om-h2">Beta-status</div>
-      <p class="om-p">Officiella VM 2026-trupper är ännu inte fullt fastställda. 36 lag har officiella trupper, 12 lag (Argentina, Uruguay, Mexiko m.fl.) använder välkända spelare men inte de exakta, officiella trupperna. Uppdateras löpande.</p>
+      <div class="om-h2">Beta</div>
+      <p class="om-p">36 lag har officiella trupper. 12 lag (Argentina, Uruguay, Mexiko m.fl.) uppdateras när FIFA fastställer trupperna.</p>
     </div>
     <div class="om-disclaimer">
       <strong>⚠️ Ej affilierat med FIFA</strong><br>
       Denna simulator är ett oberoende hobbyprojekt utan koppling till FIFA, UEFA eller någon annan fotbollsorganisation. Alla simuleringsresultat är fiktiva. Lag- och spelardata används i informationssyfte.
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.3);letter-spacing:.5px">
+      Frågor &amp; funderingar: <a href="mailto:hnrkB84@outlook.com" style="color:rgba(255,255,255,.55);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2)">hnrkB84@outlook.com</a>
     </div>
   </div>
 </div>
@@ -691,8 +691,7 @@ const SQUADS={
 'Österrike':sq(['Patrick Pentz','Alexander Schlager','Florian Wiegele'],['David Affengruber','David Alaba','Kevin Danso','Marco Friedl','Philipp Lienhart','Phillipp Mwene','Stefan Posch','Alexander Prass'],['Christoph Baumgartner','Carney Chukwuemeka','Florian Grillitsch','Konrad Laimer','Marcel Sabitzer','Xaver Schlager','Romano Schmid','Alessandro Schopf'],['Marko Arnautovic','Michael Gregoritsch','Sasa Kalajdzic','Österrike FWD4']),
 };
 
-// Venue data — FIFA 2026 bekräftade arenor per grupp (gruppspel)
-// Källa: FIFA officiellt schema
+// Venue data — FIFA 2026 bekräftade arenor (officiellt schema)
 const GROUP_VENUES={
   A:['Estadio Azteca, Mexico City','Estadio Akron, Guadalajara','Estadio BBVA, Monterrey'],
   B:['SoFi Stadium, Los Angeles','Levi\'s Stadium, San Francisco','AT&T Stadium, Dallas'],
@@ -707,9 +706,51 @@ const GROUP_VENUES={
   K:['Mercedes-Benz Stadium, Atlanta','Hard Rock Stadium, Miami','BMO Field, Toronto'],
   L:['BC Place, Vancouver','BMO Field, Toronto','Gillette Stadium, Boston'],
 };
+// Sextondelsfinalernas bekräftade arenor (M73–M88)
+const KO_VENUES={
+  M73:'BMO Field, Toronto',
+  M74:'Mercedes-Benz Stadium, Atlanta',
+  M75:'Lumen Field, Seattle',
+  M76:'SoFi Stadium, Los Angeles',
+  M77:'NRG Stadium, Houston',
+  M78:'Hard Rock Stadium, Miami',
+  M79:'Estadio Azteca, Mexico City',
+  M80:'AT&T Stadium, Dallas',
+  M81:'Arrowhead Stadium, Kansas City',
+  M82:'Gillette Stadium, Boston',
+  M83:'BC Place, Vancouver',
+  M84:'Lincoln Financial Field, Philadelphia',
+  M85:'MetLife Stadium, New York/NJ',
+  M86:'Estadio Akron, Guadalajara',
+  M87:'Levi\'s Stadium, San Francisco',
+  M88:'Estadio BBVA, Monterrey',
+  // Åttondelsfinaler
+  M89:'MetLife Stadium, New York/NJ',
+  M90:'SoFi Stadium, Los Angeles',
+  M91:'AT&T Stadium, Dallas',
+  M92:'Arrowhead Stadium, Kansas City',
+  M93:'Hard Rock Stadium, Miami',
+  M94:'Mercedes-Benz Stadium, Atlanta',
+  M95:'Estadio Azteca, Mexico City',
+  M96:'Levi\'s Stadium, San Francisco',
+  // Kvartsfinaler
+  M97:'MetLife Stadium, New York/NJ',
+  M98:'AT&T Stadium, Dallas',
+  M99:'SoFi Stadium, Los Angeles',
+  M100:'Arrowhead Stadium, Kansas City',
+  // Semifinaler
+  M101:'AT&T Stadium, Dallas',
+  M102:'MetLife Stadium, New York/NJ',
+  // Bronsmatch + Final
+  M103:'Hard Rock Stadium, Miami',
+  M104:'MetLife Stadium, New York/NJ',
+};
 function getGroupVenue(group,matchIdx){
   const venues=GROUP_VENUES[group];
   return venues?venues[matchIdx%venues.length]:'Stadium · TBD';
+}
+function getKOVenue(matchId){
+  return KO_VENUES[matchId]||'Stadium · TBD';
 }
 
 // Resterande lag — placeholder tills officiella trupper
@@ -923,40 +964,117 @@ const SUPA_URL='https://gjaultvebfijesdstcqp.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqYXVsdHZlYmZpamVzZHN0Y3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDQzMDAsImV4cCI6MjA5NTQ4MDMwMH0.RhVIOq0YTppgbaSIVIgZmZpjd2dcXHE3hZf3iuDp5-c';
 const SUPA_H={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
 
-// localStorage som lokal fallback/cache
-const TK='vm2026_v13_local';
-function loadLocal(){try{return JSON.parse(localStorage.getItem(TK)||'{"n":0,"gold":{},"silver":{},"bronze":{}}')}catch{return{n:0,gold:{},silver:{},bronze:{}};}}
-function saveLocal(d){localStorage.setItem(TK,JSON.stringify(d));}
+const TK='vm2026_v14_local';
+function loadLocal(){try{return JSON.parse(localStorage.getItem(TK)||'{}')}catch{return{};}}
+function saveLocal(d){try{localStorage.setItem(TK,JSON.stringify(d));}catch{}}
 
-// Skicka resultat till Supabase (+ lokal backup)
-async function addTotal(w,ru,t3){
-  // Lokal backup alltid
-  const d=loadLocal();d.n++;d.gold[w]=(d.gold[w]||0)+1;d.silver[ru]=(d.silver[ru]||0)+1;d.bronze[t3]=(d.bronze[t3]||0)+1;saveLocal(d);
-  // Supabase
-  try{
-    await fetch(SUPA_URL+'/rest/v1/rpc/increment_hof',{
-      method:'POST',headers:SUPA_H,
-      body:JSON.stringify({p_winner:w,p_runner_up:ru,p_third:t3})
-    });
-  }catch(e){console.warn('Supabase offline — lokalt sparat',e);}
+// Räkna ut rundjup per lag från simuleringsresultatet
+function buildTeamData(simResult){
+  const{gRes,mr,winner,runnerUp,third}=simResult;
+  const teamData={};
+  // Alla 48 lag börjar på rund 1
+  for(const teams of Object.values(GRP||{})){
+    for(const t of teams){
+      teamData[t]={round:1,goals:0,ga:0,matches:0};
+    }
+  }
+  // Gruppspelets mål
+  for(const[,d]of Object.entries(gRes||{})){
+    for(const m of(d.matches||[])){
+      if(teamData[m.home]){teamData[m.home].goals+=m.gA;teamData[m.home].ga+=m.gB;teamData[m.home].matches++;}
+      if(teamData[m.away]){teamData[m.away].goals+=m.gB;teamData[m.away].ga+=m.gA;teamData[m.away].matches++;}
+    }
+  }
+  // KO-rundor: rund 2=R32, 3=R16, 4=QF, 5=SF, 6=Final, 7=Vinnare
+  const roundMap=[
+    [2,['M73','M74','M75','M76','M77','M78','M79','M80','M81','M82','M83','M84','M85','M86','M87','M88']],
+    [3,['M89','M90','M91','M92','M93','M94','M95','M96']],
+    [4,['M97','M98','M99','M100']],
+    [5,['M101','M102']],
+    [6,['M104']],
+  ];
+  for(const[rnd,ids]of roundMap){
+    for(const id of ids){
+      const m=mr?.[id];if(!m)continue;
+      for(const[team,goals,ga]of[[m.home,m.gA,m.gB],[m.away,m.gB,m.gA]]){
+        if(teamData[team]){
+          teamData[team].round=Math.max(teamData[team].round,rnd);
+          teamData[team].goals+=goals;teamData[team].ga+=ga;teamData[team].matches++;
+        }
+      }
+    }
+  }
+  // Bronsmatch
+  const bm=mr?.M103;
+  if(bm){
+    for(const[team,goals,ga]of[[bm.home,bm.gA,bm.gB],[bm.away,bm.gB,bm.gA]]){
+      if(teamData[team]){teamData[team].goals+=goals;teamData[team].ga+=ga;teamData[team].matches++;}
+    }
+  }
+  // Vinnaren får rund 7
+  if(teamData[winner])teamData[winner].round=7;
+  return Object.entries(teamData).map(([team,d])=>({team,...d}));
 }
 
-// Hämta global data från Supabase
+// Skicka resultat till Supabase
+async function addTotal(simResult){
+  const{winner,runnerUp,third,scorers,stats}=simResult;
+  // Lokal backup
+  const loc=loadLocal();
+  loc.n=(loc.n||0)+1;
+  loc.gold=loc.gold||{};loc.silver=loc.silver||{};loc.bronze=loc.bronze||{};
+  loc.gold[winner]=(loc.gold[winner]||0)+1;
+  loc.silver[runnerUp]=(loc.silver[runnerUp]||0)+1;
+  loc.bronze[third]=(loc.bronze[third]||0)+1;
+  saveLocal(loc);
+  // Supabase
+  try{
+    const teamData=buildTeamData(simResult);
+    const topScorer=scorers?.[0];
+    const scorerKey=topScorer?topScorer.name+'|'+topScorer.team:'';
+    await fetch(SUPA_URL+'/rest/v1/rpc/increment_hof_v2',{
+      method:'POST',headers:SUPA_H,
+      body:JSON.stringify({
+        p_winner:winner,p_runner_up:runnerUp,p_third:third,
+        p_team_data:teamData,
+        p_total_goals:stats?.totalGoals||0,
+        p_pen_matches:stats?.penMs||0,
+        p_scorer_key:scorerKey,
+        p_scorer_name:topScorer?.name||'',
+        p_scorer_team:topScorer?.team||''
+      })
+    });
+  }catch(e){console.warn('Supabase offline',e);}
+}
+
+// Hämta all data från Supabase
 async function loadTotal(){
   try{
-    const [sr,mr]=await Promise.all([
+    const[sr,mr,tr]=await Promise.all([
       fetch(SUPA_URL+'/rest/v1/hof_stats?select=*',{headers:SUPA_H}),
-      fetch(SUPA_URL+'/rest/v1/hof_meta?select=total_sims&id=eq.1',{headers:SUPA_H})
+      fetch(SUPA_URL+'/rest/v1/hof_meta?select=*&id=eq.1',{headers:SUPA_H}),
+      fetch(SUPA_URL+'/rest/v1/hof_topscorer?select=*&order=times_top.desc&limit=10',{headers:SUPA_H})
     ]);
-    if(!sr.ok||!mr.ok)throw new Error('HTTP '+sr.status);
+    if(!sr.ok)throw new Error('HTTP '+sr.status);
     const stats=await sr.json();
-    const meta=await mr.json();
-    const gold={},silver={},bronze={};
-    for(const r of stats){gold[r.team]=r.gold;silver[r.team]=r.silver;bronze[r.team]=r.bronze;}
-    return{n:meta[0]?.total_sims||0,gold,silver,bronze,_source:'supabase'};
+    const meta=(await mr.json())[0]||{};
+    const topscorers=await tr.json();
+    const gold={},silver={},bronze={},rounds={},goals={},ga={},matches={};
+    for(const r of stats){
+      gold[r.team]=r.gold||0;silver[r.team]=r.silver||0;bronze[r.team]=r.bronze||0;
+      rounds[r.team]={r32:r.reached_r32||0,r16:r.reached_r16||0,qf:r.reached_qf||0,sf:r.reached_sf||0,final:r.reached_final||0};
+      goals[r.team]=r.total_goals||0;
+      ga[r.team]=r.total_ga||0;
+      matches[r.team]=r.total_matches||0;
+    }
+    return{n:meta.total_sims||0,gold,silver,bronze,rounds,goals,ga,matches,
+      sumGoals:meta.sum_goals||0,sumPen:meta.sum_pen_matches||0,
+      topscorers,_source:'supabase'};
   }catch(e){
-    console.warn('Supabase offline — visar lokalt',e);
-    return loadLocal();
+    console.warn('Supabase offline',e);
+    const loc=loadLocal();
+    return{n:loc.n||0,gold:loc.gold||{},silver:loc.silver||{},bronze:loc.bronze||{},
+      rounds:{},goals:{},ga:{},matches:{},sumGoals:0,sumPen:0,topscorers:[],_source:'local'};
   }
 }
 
@@ -1009,7 +1127,7 @@ function buildBkt(cid,def,mr){
     h+=`<div><div class="bkt-side-hdr">${side==='left'?'← Vänster sida':'Höger sida →'}</div>`;
     for(const g of def[side]){
       h+=`<div class="bkt-group"><div class="bkt-group-lbl"><span>${g.lbl}</span><span class="bkt-nxt">${g.nxt}</span></div>`;
-      for(const id of g.ids){const r=mr[id];h+=buildMC(id,r?.home||'?',r?.away||'?',null);}
+      for(const id of g.ids){const r=mr[id];h+=buildMC(id,r?.home||'?',r?.away||'?',null,getKOVenue(id));}
       h+=`</div>`;
     }
     h+=`</div>`;
@@ -1086,38 +1204,99 @@ function renderAftermath(){
   });
   document.getElementById('sc-html').innerHTML=sh;
 
-  // VM-XI — 4-3-3, position-korrekt
-  // GK: välj bästa GK från vinnarlaget (position-logik, ej mål)
-  // DEF/MID/FWD: välj de med flest mål PER POSITION
-  const byPos={FWD:[],MID:[],DEF:[],GK:[]};
-  for(const s of scorers){const p=s.pos||'FWD';(byPos[p]||byPos.FWD).push(s);}
+  // ══ VM-XI URVAL — sportlogik, inte bara mål ══
+  // FWD: flest mål bland anfallare (rätt — anfallares jobb är att göra mål)
+  // MID: bästa mittfältare från lag som nådde sent i turneringen
+  // DEF: backar från lag med bäst defensiv statistik (minst insläppta, nådde R16+)
+  // GK:  målvakt från vinnarlaget
+
   const used=new Set();
-  const pick=(p,n)=>byPos[p].filter(s=>!used.has(s.name+'|'+s.team)).slice(0,n).map(s=>{used.add(s.name+'|'+s.team);return s;});
-  function fillFromSquad(arr,pos,needed){
-    if(arr.length>=needed)return arr;
-    // Prioritera lag som faktiskt kom långt (vinnare, finalist, semifinalister)
-    const topTeams=[S.winner,S.runnerUp,S.third];
-    for(const t of [...topTeams,...Object.keys(SQUADS)]){
-      const sq2=SQUADS[t];if(!sq2)continue;
-      for(const p of sq2){
-        if(p.pos===pos&&!used.has(p.name+'|'+t)){
-          used.add(p.name+'|'+t);arr.push({name:p.name,team:t,pos,goals:0});
-          if(arr.length>=needed)return arr;
+
+  // Räkna hur långt varje lag kom
+  function teamDepth(team){
+    if(team===S.winner)return 7;
+    if(team===S.runnerUp)return 6;
+    if(team===S.third||team===S.mr?.M103?.winner)return 5;
+    for(const m of [S.mr?.M101,S.mr?.M102]){if(m&&(m.home===team||m.away===team))return 4;}
+    for(const id of['M97','M98','M99','M100']){const m=S.mr?.[id];if(m&&(m.home===team||m.away===team))return 3;}
+    for(const id of['M89','M90','M91','M92','M93','M94','M95','M96']){const m=S.mr?.[id];if(m&&(m.home===team||m.away===team))return 2;}
+    return 1; // Gruppspelets lag
+  }
+
+  // Defensiv poäng per lag från gruppspelet (lägre GA = bättre)
+  const teamGA={};
+  for(const[,d]of Object.entries(S.gRes||{})){
+    for(const[t,s]of d.table){teamGA[t]=s.ga;}
+  }
+
+  // GK — från vinnarlaget
+  const winnerGK=SQUADS[S.winner]?.find(p=>p.pos==='GK');
+  const gkEntry=winnerGK?{name:winnerGK.name,team:S.winner,pos:'GK',note:'Vinnarlaget'}:null;
+  if(gkEntry)used.add(gkEntry.name+'|'+gkEntry.team);
+
+  // FWD — top 3 målskyttar bland anfallare
+  const fwdScorers=scorers.filter(s=>s.pos==='FWD'&&!used.has(s.name+'|'+s.team));
+  const xiFWD=fwdScorers.slice(0,3);
+  xiFWD.forEach(s=>used.add(s.name+'|'+s.team));
+
+  // MID — bästa MID från lag som nådde längst (djup 4+), sen 3, sen 2
+  const xiMID=[];
+  for(const depth of [7,6,5,4,3,2,1]){
+    if(xiMID.length>=3)break;
+    const teamsAtDepth=Object.keys(SQUADS).filter(t=>teamDepth(t)===depth);
+    for(const t of teamsAtDepth){
+      if(xiMID.length>=3)break;
+      const sq=SQUADS[t]||[];
+      // Ta bästa MID från laget (första i truppen = förstaval)
+      for(const p of sq){
+        if(p.pos==='MID'&&!used.has(p.name+'|'+t)){
+          // Kolla om de har mål i simuleringen (bonus)
+          const goals=scorers.find(s=>s.name===p.name&&s.team===t)?.goals||0;
+          xiMID.push({name:p.name,team:t,pos:'MID',goals,note:`Djup ${depth}`});
+          used.add(p.name+'|'+t);
+          break; // En MID per lag
         }
       }
     }
-    return arr;
   }
-  // GK: ta alltid från vinnarlaget (första GK i truppen = förstaval)
-  const winnerGK=SQUADS[S.winner]?.find(p=>p.pos==='GK');
-  const gkEntry=winnerGK?{name:winnerGK.name,team:S.winner,pos:'GK',goals:byPos.GK.find(s=>s.name===winnerGK.name&&s.team===S.winner)?.goals||0}:null;
-  if(gkEntry)used.add(gkEntry.name+'|'+gkEntry.team);
-  const xi=[
-    ...fillFromSquad(pick('FWD',3),'FWD',3),
-    ...fillFromSquad(pick('MID',3),'MID',3),
-    ...fillFromSquad(pick('DEF',4),'DEF',4),
-    ...(gkEntry?[gkEntry]:fillFromSquad(pick('GK',1),'GK',1))
-  ].slice(0,11);
+
+  // DEF — backar från lag med bäst defensiv statistik som nådde R16+
+  const xiDEF=[];
+  // Sortera lag efter: nådde långt + få insläppta
+  const defTeams=Object.keys(SQUADS)
+    .filter(t=>teamDepth(t)>=2)
+    .sort((a,b)=>{
+      const depthDiff=teamDepth(b)-teamDepth(a);
+      if(depthDiff!==0)return depthDiff;
+      return (teamGA[a]||99)-(teamGA[b]||99); // Färre insläppta = bättre
+    });
+  for(const t of defTeams){
+    if(xiDEF.length>=4)break;
+    const sq=SQUADS[t]||[];
+    for(const p of sq){
+      if(p.pos==='DEF'&&!used.has(p.name+'|'+t)){
+        const goals=scorers.find(s=>s.name===p.name&&s.team===t)?.goals||0;
+        xiDEF.push({name:p.name,team:t,pos:'DEF',goals,note:`GA: ${teamGA[t]||'?'}`});
+        used.add(p.name+'|'+t);
+        break; // En back per lag
+      }
+    }
+  }
+  // Fyll upp om vi inte fått 4 DEF
+  if(xiDEF.length<4){
+    for(const[t,sq] of Object.entries(SQUADS)){
+      if(xiDEF.length>=4)break;
+      for(const p of sq){
+        if(p.pos==='DEF'&&!used.has(p.name+'|'+t)){
+          xiDEF.push({name:p.name,team:t,pos:'DEF',goals:0,note:''});
+          used.add(p.name+'|'+t);
+          break;
+        }
+      }
+    }
+  }
+
+  const xi=[...xiFWD,...xiMID,...xiDEF,...(gkEntry?[gkEntry]:[])].slice(0,11);
   const pp=[{x:20,y:10},{x:50,y:7},{x:80,y:10},{x:18,y:36},{x:50,y:32},{x:82,y:36},{x:10,y:60},{x:33,y:58},{x:67,y:58},{x:90,y:60},{x:50,y:83}];
   let pitch='';
   xi.forEach((p,i)=>{
@@ -1132,8 +1311,11 @@ function renderAftermath(){
     </div>`;
   });
   let xt=`<table class="gt" style="background:var(--c1);border:1px solid var(--bo);border-radius:var(--r);overflow:hidden;margin-top:10px">
-    <thead><tr><th>#</th><th class="l">Spelare</th><th class="l">Pos</th><th class="l">Lag</th><th>Mål</th></tr></thead><tbody>`;
-  xi.forEach((s,i)=>{xt+=`<tr><td style="color:var(--gld);font-weight:700">${i+1}</td><td class="l" style="font-weight:600">${s.name}</td><td class="l"><span class="sc-pos ${s.pos}">${s.pos}</span></td><td class="l">${fi(s.team)} ${s.team}</td><td style="color:var(--gld);font-weight:700;font-size:16px">${s.goals}</td></tr>`;});
+    <thead><tr><th>#</th><th class="l">Spelare</th><th class="l">Pos</th><th class="l">Lag</th><th class="l">Urval</th><th>Mål</th></tr></thead><tbody>`;
+  xi.forEach((s,i)=>{
+    const posReason={FWD:'Mål',MID:'Turneringsdjup',DEF:'Defensivt',GK:'Vinnarlaget'};
+    xt+=`<tr><td style="color:var(--gld);font-weight:700">${i+1}</td><td class="l" style="font-weight:600">${s.name}</td><td class="l"><span class="sc-pos ${s.pos}">${s.pos}</span></td><td class="l">${fi(s.team)} ${s.team}</td><td style="font-size:11px;color:var(--mu)">${posReason[s.pos]||''}</td><td style="color:var(--gld);font-weight:700;font-size:16px">${s.goals||0}</td></tr>`;
+  });
   xt+='</tbody></table>';
   document.getElementById('xi-html').innerHTML=`<div class="pitch-wrap"><div class="pitch-lbl">4 – 3 – 3</div><div class="pitch">${pitch}</div></div>${xt}`;
 }
@@ -1220,29 +1402,28 @@ function renderStats(){
 async function renderTotal(){
   const el=document.getElementById('total-html');
   if(!el)return;
-  // Visa laddningsindikator
   el.innerHTML='<div style="padding:32px;text-align:center;color:var(--mu);font-size:13px;letter-spacing:2px;text-transform:uppercase">Laddar statistik…</div>';
   let d;
-  try{d=await loadTotal();}catch(e){d={n:0,gold:{},silver:{},bronze:{}};}
-  // All 48 teams — always shown
+  try{d=await loadTotal();}catch(e){d={n:0,gold:{},silver:{},bronze:{},rounds:{},goals:{},ga:{},matches:{},sumGoals:0,sumPen:0,topscorers:[]};}
+
+  const n=d.n||0;
   const ALL_TEAMS=Object.keys(FC);
   const all=ALL_TEAMS.map(t=>({
     t,
-    g:d.gold[t]||0,
-    s:d.silver[t]||0,
-    b:d.bronze[t]||0,
-    podium:(d.gold[t]||0)+(d.silver[t]||0)+(d.bronze[t]||0)
+    g:d.gold[t]||0,s:d.silver[t]||0,b:d.bronze[t]||0,
+    podium:(d.gold[t]||0)+(d.silver[t]||0)+(d.bronze[t]||0),
+    r:d.rounds[t]||{},
+    gf:d.goals[t]||0,ga:d.ga[t]||0,mp:d.matches[t]||0
   })).sort((a,b)=>b.g-a.g||b.podium-a.podium||b.s-a.s||b.b-a.b);
 
-  const n=d.n||0;
   const maxG=all[0]?.g||1;
-
-  // Nerd stats
+  const topWinner=all[0];
+  const mostPodium=all.filter(x=>x.podium>0).sort((a,b)=>b.podium-a.podium)[0];
   const neverWon=all.filter(x=>x.g===0&&n>0);
   const neverPodium=all.filter(x=>x.podium===0&&n>0);
-  const mostPodium=all.filter(x=>x.podium>0).sort((a,b)=>b.podium-a.podium)[0];
-  const topWinner=all[0];
   const bigUpset=all.filter(x=>x.g>0).sort((a,b)=>(FIFA_BASE[a.t]||65)-(FIFA_BASE[b.t]||65))[0];
+  const avgGoals=n>0?(d.sumGoals/n).toFixed(1):'–';
+  const avgPen=n>0?(d.sumPen/n).toFixed(1):'–';
 
   if(!n){
     el.innerHTML=`<div class="hof-top"><div class="hof-total-n">0</div><div class="hof-total-l">Simulerade turneringar</div></div>
@@ -1250,52 +1431,83 @@ async function renderTotal(){
     return;
   }
 
-  // Top block
+  // ── SEKTION 1: HEADER ──
   let h=`<div class="hof-top">
     <div class="hof-total-n">${n}</div>
     <div class="hof-total-l">Totalt simulerade VM-turneringar</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:6px;letter-spacing:1px">${d._source==='supabase'?'🌐 Global statistik':'💾 Lokal data'}</div>
   </div>`;
 
-  // Nerd stats grid
+  // ── SEKTION 2: NERD-STATS ──
   h+=`<div class="hof-nerd">`;
-  if(topWinner&&topWinner.g>0) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🥇 Trolig vinnare</div><div class="hof-nerd-val">${fi(topWinner.t,20)} ${topWinner.t}<span class="sub">${(topWinner.g/n*100).toFixed(1)}% av turneringar</span></div></div>`;
-  if(mostPodium) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🏅 Mest pallplatser</div><div class="hof-nerd-val">${fi(mostPodium.t,20)} ${mostPodium.t}<span class="sub">${(mostPodium.podium/n*100).toFixed(1)}% av turneringar</span></div></div>`;
-  if(bigUpset&&bigUpset.g>0) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🎯 Störst underdog</div><div class="hof-nerd-val">${fi(bigUpset.t,20)} ${bigUpset.t}<span class="sub">vunnit ${bigUpset.g} gång${bigUpset.g>1?'er':''}</span></div></div>`;
-  if(neverWon.length) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">❌ Har aldrig vunnit</div><div class="hof-nerd-val" style="font-size:13px">${neverWon.slice(0,4).map(x=>`${fi(x.t,18)} ${x.t}`).join(' · ')}${neverWon.length>4?' m.fl.':''}</div></div>`;
-  if(neverPodium.length&&n>=10) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🫥 Aldrig på pallen</div><div class="hof-nerd-val" style="font-size:12px">${neverPodium.slice(0,4).map(x=>x.t).join(', ')}${neverPodium.length>4?` + ${neverPodium.length-4} till`:''}</div></div>`;
-  // Draw distribution estimate
-  const avgGold=(n>0&&topWinner)?topWinner.g/n:0;
-  h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">📊 Spridning</div><div class="hof-nerd-val">${all.filter(x=>x.g>0).length} lag<span class="sub">har vunnit minst en gång</span></div></div>`;
+  if(topWinner?.g>0) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🥇 Trolig vinnare</div><div class="hof-nerd-val">${fi(topWinner.t,18)} ${topWinner.t}<span class="sub">${(topWinner.g/n*100).toFixed(1)}% guld</span></div></div>`;
+  if(mostPodium) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🏅 Mest pallplatser</div><div class="hof-nerd-val">${fi(mostPodium.t,18)} ${mostPodium.t}<span class="sub">${(mostPodium.podium/n*100).toFixed(1)}% av turneringar</span></div></div>`;
+  h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">⚽ Snittmål per turnering</div><div class="hof-nerd-val">${avgGoals}<span class="sub">mål · ${avgPen} straffar i snitt</span></div></div>`;
+  if(d.topscorers?.length) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">👟 Vanligaste skyttekung</div><div class="hof-nerd-val">${fi(d.topscorers[0].team,18)} ${d.topscorers[0].name}<span class="sub">${(d.topscorers[0].times_top/n*100).toFixed(1)}% av turneringar</span></div></div>`;
+  if(bigUpset?.g>0) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🎯 Störst underdog</div><div class="hof-nerd-val">${fi(bigUpset.t,18)} ${bigUpset.t}<span class="sub">vunnit ${bigUpset.g} gång${bigUpset.g>1?'er':''}</span></div></div>`;
+  if(neverWon.length) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">❌ Har aldrig vunnit</div><div class="hof-nerd-val" style="font-size:12px">${neverWon.slice(0,5).map(x=>`${fi(x.t,16)} ${x.t}`).join(' · ')}${neverWon.length>5?` +${neverWon.length-5} till`:''}</div></div>`;
+  if(neverPodium.length&&n>=5) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🫥 Aldrig på pallen</div><div class="hof-nerd-val" style="font-size:12px">${neverPodium.slice(0,4).map(x=>x.t).join(', ')}${neverPodium.length>4?` + ${neverPodium.length-4} till`:''}</div></div>`;
   h+=`</div>`;
 
-  // Full table — all 48 teams
+  // ── SEKTION 3: RUND-PROGRESSION (om vi har rund-data) ──
+  const hasRoundData=Object.values(d.rounds||{}).some(r=>r.r32>0);
+  if(hasRoundData){
+    const byRound=[...all].filter(x=>x.r.sf>0).sort((a,b)=>b.r.sf-a.r.sf||b.r.qf-a.r.qf||b.g-a.g);
+    if(byRound.length){
+      h+=`<div class="scard" style="margin-bottom:12px"><div class="scard-h"><span>📈</span>Turneringsdjup — hur långt lag brukar nå</div><div class="scard-b" style="padding:0">`;
+      h+=`<table class="tt"><thead><tr><th class="l" style="padding-left:14px">Lag</th><th>Grupp</th><th>R32</th><th>R16</th><th>QF</th><th>SF</th><th>Final</th><th>🥇</th></tr></thead><tbody>`;
+      byRound.slice(0,16).forEach(x=>{
+        const pct=v=>n?Math.round(v/n*100)+'%':'–';
+        h+=`<tr>
+          <td class="l" style="padding-left:14px"><div style="display:flex;align-items:center;gap:6px">${fi(x.t,18)} ${x.t}</div></td>
+          <td style="font-size:12px;color:var(--mu)">100%</td>
+          <td style="font-size:12px">${pct(x.r.r32||0)}</td>
+          <td style="font-size:12px">${pct(x.r.r16||0)}</td>
+          <td style="font-size:12px">${pct(x.r.qf||0)}</td>
+          <td style="font-size:12px;font-weight:${x.r.sf>0?600:400}">${pct(x.r.sf||0)}</td>
+          <td style="font-size:12px;color:${x.r.final>0?'var(--gld)':'inherit'}">${pct(x.r.final||0)}</td>
+          <td style="font-size:13px;font-weight:700;color:${x.g>0?'var(--gld)':'var(--mu)'}">${pct(x.g)}</td>
+        </tr>`;
+      });
+      h+=`</tbody></table></div></div>`;
+    }
+
+    // ── SEKTION 4: MÅLSTATISTIK ──
+    const hasGoalData=Object.values(d.goals||{}).some(v=>v>0);
+    if(hasGoalData){
+      const byGoalAvg=[...all].filter(x=>x.mp>0).sort((a,b)=>(b.gf/b.mp)-(a.gf/a.mp));
+      const byDefAvg=[...all].filter(x=>x.mp>0).sort((a,b)=>(a.ga/a.mp)-(b.ga/b.mp));
+      h+=`<div class="stats-grid" style="margin-bottom:12px">`;
+      h+=`<div class="scard"><div class="scard-h"><span>⚽</span>Bäst attack — mål per match</div><div class="scard-b" style="padding:0">`;
+      byGoalAvg.slice(0,8).forEach((x,i)=>{
+        h+=`<div class="srow" style="padding:7px 14px"><span class="srow-l"><div style="display:flex;align-items:center;gap:6px">${fi(x.t,18)} ${x.t}</div></span><span class="srow-v hi">${(x.gf/x.mp).toFixed(2)}</span></div>`;
+      });
+      h+=`</div></div>`;
+      h+=`<div class="scard"><div class="scard-h"><span>🛡</span>Bäst försvar — insläppta per match</div><div class="scard-b" style="padding:0">`;
+      byDefAvg.slice(0,8).forEach((x,i)=>{
+        h+=`<div class="srow" style="padding:7px 14px"><span class="srow-l"><div style="display:flex;align-items:center;gap:6px">${fi(x.t,18)} ${x.t}</div></span><span class="srow-v">${(x.ga/x.mp).toFixed(2)}</span></div>`;
+      });
+      h+=`</div></div></div>`;
+    }
+  }
+
+  // ── SEKTION 5: FULL TABELL alla 48 lag ──
   h+=`<div class="hof-table-wrap"><div class="t-hdr" style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--c2);border-bottom:1px solid var(--bo)">
     <span class="t-hdr-lbl">Alla 48 lag</span>
-    <button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="if(confirm('Nollställ Hall of Fame?')){localStorage.removeItem(TK);renderTotal();}">Nollställ</button>
+    <button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="if(confirm('Nollställ Hall of Fame?')){localStorage.removeItem(TK);renderTotal();}">Nollställ lokal</button>
   </div>
   <table class="tt"><thead><tr>
-    <th style="width:28px">#</th>
-    <th class="l">Lag</th>
-    <th class="l" style="min-width:110px">🥇 Guld</th>
-    <th>🥈 Silver</th>
-    <th>🥉 Brons</th>
-    <th>Pall%</th>
+    <th style="width:28px">#</th><th class="l">Lag</th>
+    <th class="l" style="min-width:100px">🥇 Guld</th>
+    <th>🥈</th><th>🥉</th><th>Pall%</th>
   </tr></thead><tbody>`;
-
   all.forEach(({t,g,s,b,podium},i)=>{
-    const goldPct=n?g/n*100:0;
-    const podPct=n?podium/n*100:0;
-    const rowBg=i<3?`background:${['rgba(201,162,39,.06)','rgba(180,180,180,.05)','rgba(180,120,60,.05)'][i]}`:i%2===1?'background:var(--c2)':'';
-    h+=`<tr style="${rowBg}">
+    const goldPct=n?g/n*100:0,podPct=n?podium/n*100:0;
+    const bg=i%2===1?'background:var(--c2)':'';
+    h+=`<tr style="${bg}">
       <td style="color:${i<3?'var(--gld)':i<8?'var(--tx)':'var(--mu)'};font-weight:${i<3?700:400}">${i+1}</td>
-      <td class="l"><div style="display:flex;align-items:center;gap:7px">${fi(t,20)} <span style="font-weight:${g>0?700:400};color:${g>0?'var(--tx)':'var(--mu)'}">${t}</span></div></td>
-      <td class="l">
-        ${g>0?`<div style="display:flex;align-items:center;gap:7px">
-          <div style="width:60px;height:3px;background:var(--bo);border-radius:2px;overflow:hidden"><div style="height:100%;width:${~~(g/maxG*100)}%;background:var(--gld);border-radius:2px"></div></div>
-          <span style="font-size:13px;font-weight:700;color:var(--gld)">${goldPct.toFixed(1)}%</span>
-        </div>`:
-        `<span style="color:var(--bo2);font-size:12px">–</span>`}
-      </td>
+      <td class="l"><div style="display:flex;align-items:center;gap:7px">${fi(t,20)}<span style="font-weight:${g>0?700:400};color:${g>0?'var(--tx)':'var(--mu)'}">${t}</span></div></td>
+      <td class="l">${g>0?`<div style="display:flex;align-items:center;gap:7px"><div style="width:50px;height:3px;background:var(--bo);border-radius:2px;overflow:hidden"><div style="height:100%;width:${~~(g/maxG*100)}%;background:var(--gld);border-radius:2px"></div></div><span style="font-size:13px;font-weight:700;color:var(--gld)">${goldPct.toFixed(1)}%</span></div>`:'<span style="color:var(--bo2);font-size:12px">–</span>'}</td>
       <td style="color:${s>0?'var(--mu)':'var(--bo2)'};font-size:12px">${s>0?(s/n*100).toFixed(1)+'%':'–'}</td>
       <td style="color:${b>0?'var(--mu)':'var(--bo2)'};font-size:12px">${b>0?(b/n*100).toFixed(1)+'%':'–'}</td>
       <td style="color:${podium>0?'var(--tx)':'var(--bo2)'};font-size:12px;font-weight:${podium>0?600:400}">${podium>0?podPct.toFixed(1)+'%':'–'}</td>
@@ -1305,82 +1517,6 @@ async function renderTotal(){
   el.innerHTML=h;
 }
 
-// ════════════════════════════════════════
-// FLOW
-// ════════════════════════════════════════
-let S=null;
-const ROUND_IDS={r32:R32D.map(m=>m.id),r16:R16D.map(m=>m.id),qf:QFD.map(m=>m.id),sf:SFD.map(m=>m.id),brons:['M103']};
-
-function triggerSim(roundName, cb){
-  showOverlay(roundName, cb);
-}
-
-function doSimGroups(){
-  document.getElementById('sb-1').disabled=true;
-  Object.keys(GRP).forEach((g,i)=>setTimeout(()=>{
-    fillGroup(g,S.gRes[g]);
-    if(i===11)setTimeout(()=>showNxt(1),300);
-  },i*100));
-}
-
-function doReveal(round,step){
-  document.getElementById('sb-'+step).disabled=true;
-  const ids=ROUND_IDS[round];
-  ids.forEach((id,i)=>setTimeout(()=>{
-    revMC(id,S.mr[id]);
-    if(i===ids.length-1)setTimeout(()=>showNxt(step),400);
-  },i*190));
-}
-
-function doRevealFinal(){
-  document.getElementById('sb-7').disabled=true;
-  const fn=S.mr['M104'];
-  document.getElementById('ko-final').innerHTML=`<div class="fin-wrap">
-    <div class="fin-badge">MetLife Stadium · East Rutherford, NJ · 19 juli 2026</div>
-    <div class="fin-trophy">🏆</div>
-    <div class="fin-mc">${buildMC('M104f',fn.home,fn.away,null)}</div>
-  </div>`;
-  setTimeout(()=>{
-    revMC('M104f',fn);
-    setTimeout(()=>{
-      const wa=document.createElement('div');wa.className='fin-winner';
-      wa.innerHTML=`${fi(fn.winner,52)}<div class="fin-wnm">${fn.winner}</div><div class="fin-wlb">Världsmästare 2026</div>`;
-      document.querySelector('.fin-wrap').appendChild(wa);
-      showNxt(7);
-    },700);
-  },400);
-}
-
-function buildKO(){
-  buildBkt('ko-r32',BKT.r32,S.mr);
-  buildBkt('ko-r16',BKT.r16,S.mr);
-  buildBkt('ko-qf',BKT.qf,S.mr);
-  buildBkt('ko-sf',BKT.sf,S.mr);
-  const br=S.mr['M103'];
-  document.getElementById('ko-brons').innerHTML=buildMC('M103',br.home,br.away,null);
-  const fn=S.mr['M104'];
-  document.getElementById('ko-final').innerHTML=`<div class="fin-wrap">
-    <div class="fin-badge">MetLife Stadium · East Rutherford, NJ · 19 juli 2026</div>
-    <div class="fin-mc">${buildMC('M104',fn.home,fn.away,null)}</div>
-  </div>`;
-}
-
-let cur=0;
-const SNAMES=['Intro','Grupper','Sextondelsfinal','Åttondelsfinal','Kvartsfinal','Semifinal','Bronsmatch','Final','Resultat','Hall of Fame'];
-function showNxt(s){document.getElementById('nb-'+s)?.classList.add('show');}
-function showTab(i,btn){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelectorAll('.tabp').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('tb-'+i)?.classList.add('on');}
-function goStep(n){document.getElementById('step-'+cur).classList.remove('on');cur=n;document.getElementById('step-'+cur).classList.add('on');window.scrollTo(0,0);updStepper();}
-function updStepper(){const st=document.getElementById('stepper');st.innerHTML='';for(let i=1;i<SNAMES.length;i++){const d=document.createElement('div');d.className='dot'+(i===cur?' on':cur>i?' done':'');d.title=SNAMES[i];d.onclick=()=>{if(cur>0)goStep(i);};st.appendChild(d);}}
-
-function startSim(){
-  S=runAll();
-  buildGroupsHTML();buildKO();renderAftermath();renderStats();
-  renderTotal(); // Visa direkt (lokal data)
-  addTotal(S.winner,S.runnerUp,S.third).catch(()=>{}).then(()=>renderTotal()); // Uppdatera med global data
-  document.getElementById('topbar').style.display='';
-  updStepper();goStep(1);
-}
-function backToIntro(){goStep(0);document.getElementById('topbar').style.display='none';updIntroPrev().catch(()=>{});}
 async function showHoFDirect(){
   // Show HoF without running a simulation
   renderTotal();
