@@ -302,6 +302,12 @@ table.tt{width:100%;border-collapse:collapse}
 .pp-g{font-size:9px;color:#f0d060;margin-top:2px;font-weight:700;background:rgba(0,0,0,.5);padding:0 4px;border-radius:2px;display:inline-block}
 .pp-pos{font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.5);display:block;margin-top:1px}
 
+
+/* Turneringsdjup tags */
+.djup-tag{font-size:11px;font-weight:600;letter-spacing:.5px;padding:3px 7px;border-radius:3px;white-space:nowrap;background:var(--c2);color:var(--mu);border:1px solid var(--bo)}
+.djup-tag.hi{background:rgba(20,90,40,.08);color:#145a28;border-color:rgba(20,90,40,.2)}
+.djup-tag.gold{background:var(--gldb2);color:var(--gld);border-color:rgba(139,94,0,.3);font-weight:700}
+
 /* ── MOBILE ── */
 @media(max-width:600px){
   .gg{grid-template-columns:1fr}
@@ -1439,6 +1445,9 @@ async function renderTotal(){
   </div>`;
 
   // ── SEKTION 2: NERD-STATS ──
+  h+=`<div style="font-size:11px;color:var(--mu);margin-bottom:8px;padding:8px 12px;background:var(--c2);border:1px solid var(--bo);border-radius:var(--r);line-height:1.6">
+    Statistiken nedan är baserad på <strong style="color:var(--tx)">${n} simulerade VM-turneringar</strong>. Varje gång du kör en simulering på den här sidan läggs resultaten till globalt — för alla besökare.
+  </div>`;
   h+=`<div class="hof-nerd">`;
   if(topWinner?.g>0) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🥇 Trolig vinnare</div><div class="hof-nerd-val">${fi(topWinner.t,18)} ${topWinner.t}<span class="sub">${(topWinner.g/n*100).toFixed(1)}% guld</span></div></div>`;
   if(mostPodium) h+=`<div class="hof-nerd-card"><div class="hof-nerd-lbl">🏅 Mest pallplatser</div><div class="hof-nerd-val">${fi(mostPodium.t,18)} ${mostPodium.t}<span class="sub">${(mostPodium.podium/n*100).toFixed(1)}% av turneringar</span></div></div>`;
@@ -1454,22 +1463,30 @@ async function renderTotal(){
   if(hasRoundData){
     const byRound=[...all].sort((a,b)=>b.r.final-a.r.final||b.r.sf-a.r.sf||b.r.qf-a.r.qf||b.r.r16-a.r.r16||b.r.r32-a.r.r32||b.g-a.g);
     if(byRound.length){
-      h+=`<div class="scard" style="margin-bottom:12px"><div class="scard-h"><span>📈</span>Turneringsdjup — hur långt lag brukar nå</div><div class="scard-b" style="padding:0">`;
-      h+=`<table class="tt"><thead><tr><th class="l" style="padding-left:14px">Lag</th><th>Grupp</th><th>R32</th><th>R16</th><th>QF</th><th>SF</th><th>Final</th><th>🥇</th></tr></thead><tbody>`;
+      h+=`<div class="scard" style="margin-bottom:12px">
+        <div class="scard-h"><span>📈</span>Hur långt lag brukar nå — baserat på ${n} simulering${n===1?'':'ar'}</div>
+        <div style="padding:8px 14px 4px;font-size:10px;color:var(--mu);line-height:1.6;border-bottom:1px solid var(--bo)">
+          Andel av alla simulerade VM-turneringar där laget nått respektive runda.<br>
+          <span style="color:var(--gld);font-weight:700">Guld%</span> = hur ofta laget vunnit turneringen.
+        </div>
+        <div class="scard-b" style="padding:0">`;
+      // Mobile-friendly: show as rows with bar instead of tiny table
       byRound.forEach(x=>{
-        const pct=v=>n?Math.round(v/n*100)+'%':'–';
-        h+=`<tr>
-          <td class="l" style="padding-left:14px"><div style="display:flex;align-items:center;gap:6px">${fi(x.t,18)} ${x.t}</div></td>
-          <td style="font-size:12px;color:var(--mu)">100%</td>
-          <td style="font-size:12px">${pct(x.r.r32||0)}</td>
-          <td style="font-size:12px">${pct(x.r.r16||0)}</td>
-          <td style="font-size:12px">${pct(x.r.qf||0)}</td>
-          <td style="font-size:12px;font-weight:${x.r.sf>0?600:400}">${pct(x.r.sf||0)}</td>
-          <td style="font-size:12px;color:${x.r.final>0?'var(--gld)':'inherit'}">${pct(x.r.final||0)}</td>
-          <td style="font-size:13px;font-weight:700;color:${x.g>0?'var(--gld)':'var(--mu)'}">${pct(x.g)}</td>
-        </tr>`;
+        const pct=v=>n?Math.round(v/n*100):0;
+        const r32p=pct(x.r.r32||0),r16p=pct(x.r.r16||0),qfp=pct(x.r.qf||0),sfp=pct(x.r.sf||0),fp=pct(x.r.final||0),gp=pct(x.g);
+        h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--bo)">
+          <div style="display:flex;align-items:center;gap:7px;min-width:130px;flex-shrink:0">${fi(x.t,20)}<span style="font-size:13px;font-weight:${gp>0?700:500}">${x.t}</span></div>
+          <div style="flex:1;display:flex;gap:4px;align-items:center;flex-wrap:wrap;min-width:0">
+            <span class="djup-tag ${r32p>=50?'hi':'lo'}">R32 ${r32p}%</span>
+            <span class="djup-tag ${r16p>=50?'hi':'lo'}">R16 ${r16p}%</span>
+            <span class="djup-tag ${qfp>=50?'hi':'lo'}">QF ${qfp}%</span>
+            <span class="djup-tag ${sfp>=50?'hi':'lo'}">SF ${sfp}%</span>
+            <span class="djup-tag ${fp>=50?'hi':'lo'}">Final ${fp}%</span>
+            <span class="djup-tag gold">${gp>0?'🥇 '+gp+'%':'–'}</span>
+          </div>
+        </div>`;
       });
-      h+=`</tbody></table></div></div>`;
+      h+=`</div></div>`;
     }
 
     // ── SEKTION 4: MÅLSTATISTIK ──
@@ -1478,12 +1495,12 @@ async function renderTotal(){
       const byGoalAvg=[...all].filter(x=>x.mp>0).sort((a,b)=>(b.gf/b.mp)-(a.gf/a.mp));
       const byDefAvg=[...all].filter(x=>x.mp>0).sort((a,b)=>(a.ga/a.mp)-(b.ga/b.mp));
       h+=`<div class="stats-grid" style="margin-bottom:12px">`;
-      h+=`<div class="scard"><div class="scard-h"><span>⚽</span>Bäst attack — mål per match</div><div class="scard-b" style="padding:0">`;
+      h+=`<div class="scard"><div class="scard-h"><span>⚽</span>Bäst attack — snittmål per match</div><div style="padding:6px 14px 4px;font-size:10px;color:var(--mu);border-bottom:1px solid var(--bo)">Genomsnitt over alla matcher i alla simuleringar</div><div class="scard-b" style="padding:0">`;
       byGoalAvg.slice(0,8).forEach((x,i)=>{
         h+=`<div class="srow" style="padding:7px 14px"><span class="srow-l"><div style="display:flex;align-items:center;gap:6px">${fi(x.t,18)} ${x.t}</div></span><span class="srow-v hi">${(x.gf/x.mp).toFixed(2)}</span></div>`;
       });
       h+=`</div></div>`;
-      h+=`<div class="scard"><div class="scard-h"><span>🛡</span>Bäst försvar — insläppta per match</div><div class="scard-b" style="padding:0">`;
+      h+=`<div class="scard"><div class="scard-h"><span>🛡</span>Bäst försvar — insläppta per match</div><div style="padding:6px 14px 4px;font-size:10px;color:var(--mu);border-bottom:1px solid var(--bo)">Lägst är bäst — snitt per match i alla simuleringar</div><div class="scard-b" style="padding:0">`;
       byDefAvg.slice(0,8).forEach((x,i)=>{
         h+=`<div class="srow" style="padding:7px 14px"><span class="srow-l"><div style="display:flex;align-items:center;gap:6px">${fi(x.t,18)} ${x.t}</div></span><span class="srow-v">${(x.ga/x.mp).toFixed(2)}</span></div>`;
       });
