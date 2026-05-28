@@ -1517,6 +1517,82 @@ async function renderTotal(){
   el.innerHTML=h;
 }
 
+
+// ════════════════════════════════════════
+// NAV + SIM FLOW
+// ════════════════════════════════════════
+let S=null;
+const ROUND_IDS={r32:R32D.map(m=>m.id),r16:R16D.map(m=>m.id),qf:QFD.map(m=>m.id),sf:SFD.map(m=>m.id),brons:['M103']};
+
+function triggerSim(roundName,cb){showOverlay(roundName,cb);}
+
+function doSimGroups(){
+  document.getElementById('sb-1').disabled=true;
+  Object.keys(GRP).forEach((g,i)=>setTimeout(()=>{
+    fillGroup(g,S.gRes[g]);
+    if(i===11)setTimeout(()=>showNxt(1),300);
+  },i*100));
+}
+
+function doReveal(round,step){
+  document.getElementById('sb-'+step).disabled=true;
+  const ids=ROUND_IDS[round];
+  ids.forEach((id,i)=>setTimeout(()=>{
+    revMC(id,S.mr[id]);
+    if(i===ids.length-1)setTimeout(()=>showNxt(step),400);
+  },i*190));
+}
+
+function doRevealFinal(){
+  document.getElementById('sb-7').disabled=true;
+  const fn=S.mr['M104'];
+  document.getElementById('ko-final').innerHTML=`<div class="fin-wrap">
+    <div class="fin-badge">MetLife Stadium · East Rutherford, NJ · 19 juli 2026</div>
+    <div class="fin-trophy">🏆</div>
+    <div class="fin-mc">${buildMC('M104f',fn.home,fn.away,null,getKOVenue('M104'))}</div>
+  </div>`;
+  setTimeout(()=>{
+    revMC('M104f',fn);
+    setTimeout(()=>{
+      const wa=document.createElement('div');wa.className='fin-winner';wa.style.animation='fadeUp .5s ease';
+      wa.innerHTML=`${fi(fn.winner,52)}<div class="fin-wnm">${fn.winner}</div><div class="fin-wlb">Världsmästare 2026</div>`;
+      document.querySelector('.fin-wrap').appendChild(wa);
+      showNxt(7);
+    },700);
+  },400);
+}
+
+function buildKO(){
+  buildBkt('ko-r32',BKT.r32,S.mr);
+  buildBkt('ko-r16',BKT.r16,S.mr);
+  buildBkt('ko-qf',BKT.qf,S.mr);
+  buildBkt('ko-sf',BKT.sf,S.mr);
+  const br=S.mr['M103'];
+  document.getElementById('ko-brons').innerHTML=buildMC('M103',br.home,br.away,null,getKOVenue('M103'));
+  const fn=S.mr['M104'];
+  document.getElementById('ko-final').innerHTML=`<div class="fin-wrap">
+    <div class="fin-badge">MetLife Stadium · East Rutherford, NJ · 19 juli 2026</div>
+    <div class="fin-mc">${buildMC('M104',fn.home,fn.away,null,getKOVenue('M104'))}</div>
+  </div>`;
+}
+
+let cur=0;
+const SNAMES=['Intro','Grupper','Sextondelsfinal','Åttondelsfinal','Kvartsfinal','Semifinal','Bronsmatch','Final','Resultat','Hall of Fame'];
+function showNxt(s){document.getElementById('nb-'+s)?.classList.add('show');}
+function showTab(i,btn){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.querySelectorAll('.tabp').forEach(p=>p.classList.remove('on'));btn.classList.add('on');document.getElementById('tb-'+i)?.classList.add('on');}
+function goStep(n){document.getElementById('step-'+cur).classList.remove('on');cur=n;document.getElementById('step-'+cur).classList.add('on');window.scrollTo(0,0);updStepper();}
+function updStepper(){const st=document.getElementById('stepper');st.innerHTML='';for(let i=1;i<SNAMES.length;i++){const d=document.createElement('div');d.className='dot'+(i===cur?' on':cur>i?' done':'');d.title=SNAMES[i];d.onclick=()=>{if(cur>0)goStep(i);};st.appendChild(d);}}
+
+function startSim(){
+  S=runAll();
+  buildGroupsHTML();buildKO();renderAftermath();renderStats();
+  renderTotal();
+  addTotal(S).catch(()=>{}).then(()=>renderTotal());
+  document.getElementById('topbar').style.display='';
+  updStepper();goStep(1);
+}
+function backToIntro(){goStep(0);document.getElementById('topbar').style.display='none';updIntroPrev().catch(()=>{});}
+
 async function showHoFDirect(){
   // Show HoF without running a simulation
   renderTotal();
