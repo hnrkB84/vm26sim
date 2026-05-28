@@ -1452,11 +1452,11 @@ async function renderTotal(){
   // ── SEKTION 3: RUND-PROGRESSION (om vi har rund-data) ──
   const hasRoundData=Object.values(d.rounds||{}).some(r=>r.r32>0);
   if(hasRoundData){
-    const byRound=[...all].filter(x=>x.r.sf>0).sort((a,b)=>b.r.sf-a.r.sf||b.r.qf-a.r.qf||b.g-a.g);
+    const byRound=[...all].sort((a,b)=>b.r.final-a.r.final||b.r.sf-a.r.sf||b.r.qf-a.r.qf||b.r.r16-a.r.r16||b.r.r32-a.r.r32||b.g-a.g);
     if(byRound.length){
       h+=`<div class="scard" style="margin-bottom:12px"><div class="scard-h"><span>📈</span>Turneringsdjup — hur långt lag brukar nå</div><div class="scard-b" style="padding:0">`;
       h+=`<table class="tt"><thead><tr><th class="l" style="padding-left:14px">Lag</th><th>Grupp</th><th>R32</th><th>R16</th><th>QF</th><th>SF</th><th>Final</th><th>🥇</th></tr></thead><tbody>`;
-      byRound.slice(0,16).forEach(x=>{
+      byRound.forEach(x=>{
         const pct=v=>n?Math.round(v/n*100)+'%':'–';
         h+=`<tr>
           <td class="l" style="padding-left:14px"><div style="display:flex;align-items:center;gap:6px">${fi(x.t,18)} ${x.t}</div></td>
@@ -1494,7 +1494,7 @@ async function renderTotal(){
   // ── SEKTION 5: FULL TABELL alla 48 lag ──
   h+=`<div class="hof-table-wrap"><div class="t-hdr" style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--c2);border-bottom:1px solid var(--bo)">
     <span class="t-hdr-lbl">Alla 48 lag</span>
-    <button class="btn btn-ghost" style="font-size:9px;padding:4px 10px" onclick="if(confirm('Nollställ Hall of Fame?')){localStorage.removeItem(TK);renderTotal();}">Nollställ lokal</button>
+
   </div>
   <table class="tt"><thead><tr>
     <th style="width:28px">#</th><th class="l">Lag</th>
